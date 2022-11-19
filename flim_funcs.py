@@ -1,4 +1,9 @@
+import tifffile
 import numpy as np
+from sdtfile import SdtFile
+from scipy.ndimage import convolve
+import matplotlib.pyplot as plt
+from skimage.filters import threshold_otsu
 
 def load_sdt(sdt_path, target_channel:int, num_channels:int = 3, im_dim:int = 512, num_bins:int = 256, plot:bool = False):
     ''' 
@@ -11,14 +16,11 @@ def load_sdt(sdt_path, target_channel:int, num_channels:int = 3, im_dim:int = 51
     im_dim : int; image xy dimensions. Assumes square image, Default = 512
     num_bins : int; number of bins in .sdt file. Default = 256
     '''
-    from sdtfile import SdtFile
     sdt = SdtFile(sdt_path)
     data = sdt.data[0]
     data = data.reshape(num_channels, im_dim, im_dim, num_bins)
     data = data[target_channel - 1]
     if plot:
-        import numpy as np
-        import matplotlib.pyplot as plt
         fig, ax = plt.subplots(1, 1, figsize=(5, 5))
         ax.imshow(np.max(data, axis=2), cmap='gray'); ax.set_title(f'Channel {target_channel}'); ax.axis('off')
         plt.show()
@@ -35,8 +37,6 @@ def load_irf(irf_path, target_channel:int, num_channels:int = 3, im_dim:int = 51
     im_dim : int; image xy dimensions. Assumes square image, Default = 512
     num_bins : int; number of bins in .sdt file. Default = 256
     '''
-    import numpy as np
-    from skimage.filters import threshold_otsu
     irf_data = load_sdt(irf_path, target_channel=target_channel, num_channels=num_channels, im_dim=im_dim, num_bins=num_bins)
     summed_image = np.sum(irf_data, axis=2)
     otsu_threshold = threshold_otsu(summed_image)
@@ -44,7 +44,6 @@ def load_irf(irf_path, target_channel:int, num_channels:int = 3, im_dim:int = 51
     masked_data = irf_data[masked_region]
     irf_summed = np.sum(masked_data, axis=0)
     if plot:
-        import matplotlib.pyplot as plt
         x_axis = np.arange(0, 12.5, 12.5/num_bins)
         fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(15, 5))
         ax1.imshow(summed_image, cmap='gray'); ax1.set_title('Summed Image'); ax1.axis('off')
@@ -61,8 +60,6 @@ def bin_flim_data(data):
     ----------
     data : numpy.ndarray
     '''
-    import numpy as np
-    from scipy.ndimage import convolve
     if not data.ndim == 3:
         print("sorry, we're only doing single channels at the moment")
         return
@@ -79,4 +76,6 @@ def load_asc(asc_path) -> np.ndarray:
     asc_path : str or Path to .asc file
     '''
     return np.loadtxt(asc_path)
+
+
 
