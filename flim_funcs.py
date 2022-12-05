@@ -8,6 +8,8 @@ import matplotlib.pyplot as plt
 from skimage.filters import threshold_otsu
 from tqdm import tqdm
 import pandas as pd
+import matplotlib.pyplot as plt 
+import seaborn as sns
 
 
 def load_sdt(sdt_path, target_channel:int, num_channels:int = 3, im_dim:int = 512, num_bins:int = 256, plot:bool = False) -> np.ndarray:
@@ -232,3 +234,61 @@ def measure_asc_files(base_file_paths: list,
         data_collection.append(file_measurements)
     
     return pd.DataFrame(data_collection)
+
+
+def measure_asc_simple(path_to_asc_files: Path, group_names: dict, assignment_type: str, 
+                       measurements: list[str], measurement_type: str = 'mean') -> pd.DataFrame:
+    """This is a simple function to streamline a simple analysis of a folder full of asc files.
+    
+    Args
+        path_to_asc_files (Path): Path to the folder containing the asc files
+        group_names (dict): Dictionary of group names and the unique identifiers for each group
+        assignment_type (str): How to assign the group names to the asc files. Options are 'all' or 'any'. 
+            'all' means that all the unique identifiers must be present in the file name to be assigned to the group.
+            'any' means that any of the unique identifiers must be present in the file name to be assigned to the group.
+        measurements (list[str]): List of asc file types to expect, for example ..._a1[%] or ..._t1
+        measurement_type (str): What type of measurement to take. Options are 'mean', 'median', 'std'
+    Returns
+        pd.DataFrame: A dataframe containing the measurements for each group
+    """
+    unique_names = find_base_file_names(path_to_asc_files)
+    assigned_groups = assign_group_to_names(unique_names, group_names, assignment = assignment_type)
+    df = measure_asc_files(base_file_paths = [path_to_asc_files / name for name in unique_names], 
+                           measurements = measurements, 
+                           group_assignments = assigned_groups)
+    return df
+
+
+def visualize_simple(df: pd.DataFrame, group_names: list, measurements: list[str], 
+                     measurement_type: str = 'mean', dpi: int = 100) -> None:
+    """Simple function to visualize the results of a simple asc file analysis
+    
+    Args
+        df (pd.DataFrame): Pandas dataframe containing the results of the analysis
+        group_names (list): List of group names to be plotted
+        measurements (list[str]): List of measurements to expect, for example ..._a1[%] or ..._t1
+        measurement_type (str): What type of measurement to take. Options are 'mean', 'median', 'std'
+        dpi (int): Dots per inch for the figure
+    
+    Returns
+        None
+    """
+    accepted_measurements = ['a1[%]', 'a2[%]', 't1', 't2']
+    measurements = [m for m in measurements if m in accepted_measurements]
+    assert len(measurements) <= 4, 'Too many measurements to plot'
+    fig, axes = plt.subplot_mosaic(mosaic = '''
+                                        AB
+                                        CD
+                                        ''',
+                                        figsize = (10, 10),
+                                        dpi = dpi)
+    for ax, meas in zip(axes.keys(), measurements):                                             # type: ignore 
+        curr_ax = axes[ax]                                                                      # type: ignore                                            
+        curr_ax.set_title(meas)
+        sns.boxplot(x = 'group', y = f'{measurement_type} {meas}', data = df, ax = curr_ax)
+        sns.scatterplot(x = 'group', y = f'{measurement_type} {meas}', data = df, ax = curr_ax, color = 'black')
+        curr_ax.set_xticklabels(curr_ax.get_xticklabels(), rotation = 45)
+    fig.tight_layout()                                                                          # type: ignore
+    plt.show()
+    
+
