@@ -1,9 +1,7 @@
 from cellpose import models
 from cellpose.io import imread, save_masks
-from tqdm import tqdm
 import os
 from pathlib import Path
-import multiprocess as mp
 
 
 def load_cellpose_model(model_name: str, use_gpu: bool = True) -> tuple:
