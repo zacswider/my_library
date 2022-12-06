@@ -228,16 +228,18 @@ def measure_asc_files(base_file_paths: list,
         for measurement in measurements:
             file_name = f'{full_path}_{measurement}.asc'
             asc_asarray = load_asc(file_name)
-            file_measurements[f'mean {measurement}'] = asc_asarray.mean()
-            file_measurements[f'median {measurement}'] = np.median(asc_asarray.ravel())
-            file_measurements[f'std {measurement}'] = asc_asarray.std()
+            mask = asc_asarray > 0
+            file_measurements[f'mean {measurement}'] = np.mean(asc_asarray[mask])
+            file_measurements[f'median {measurement}'] = np.median(asc_asarray[mask])
+            file_measurements[f'std {measurement}'] = np.std(asc_asarray[mask])
+
         data_collection.append(file_measurements)
     
     return pd.DataFrame(data_collection)
 
 
 def measure_asc_simple(path_to_asc_files: Path, group_names: dict, assignment_type: str, 
-                       measurements: list[str], measurement_type: str = 'mean') -> pd.DataFrame:
+                       measurements: list) -> pd.DataFrame:
     """This is a simple function to streamline a simple analysis of a folder full of asc files.
     
     Args
@@ -259,7 +261,7 @@ def measure_asc_simple(path_to_asc_files: Path, group_names: dict, assignment_ty
     return df
 
 
-def visualize_simple(df: pd.DataFrame, group_names: list, measurements: list[str], 
+def visualize_simple(df: pd.DataFrame, group_names: list, measurements: list, 
                      measurement_type: str = 'mean', dpi: int = 100) -> None:
     """Simple function to visualize the results of a simple asc file analysis
     
