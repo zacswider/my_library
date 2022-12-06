@@ -4,8 +4,8 @@ from scipy.stats import f_oneway
 from statsmodels.stats.multicomp import MultiComparison
 
 
-def anova_on_df(df: pd.DataFrame, group_names: list[str], measurements: list[str],
-                measurement_type: str = 'mean') -> list[str]:
+def anova_on_df(df: pd.DataFrame, group_names: list, measurements: list,
+                measurement_type: str = 'mean') -> list:
     """ANOVA of given variables between given groups in a dataframe. 
     If significant, Tukey's HSD is performed.
     
@@ -30,7 +30,7 @@ def anova_on_df(df: pd.DataFrame, group_names: list[str], measurements: list[str
     
     return significant_measurements
 
-def tukey_hsd_on_df(df: pd.DataFrame, group_names: list[str], measurements: list[str],
+def tukey_hsd_on_df(df: pd.DataFrame, group_names: list, measurements: list,
                     measurement_type: str = 'mean') -> None:
     """Tukey's HSD of given variables between given groups in a dataframe.
     
